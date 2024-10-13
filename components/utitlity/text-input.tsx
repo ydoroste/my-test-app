@@ -1,11 +1,23 @@
-import { StyleSheet, Text, View, TextInput } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TextInputProps,
+} from "react-native";
 import React, { useState } from "react";
 
-interface ITextInputProps {
+interface ITextInputProps extends TextInputProps {
   label: string;
   placeholder?: string;
+  value: string;
 }
-export function ITextInput({ label, placeholder }: ITextInputProps) {
+export function ITextInput({
+  label,
+  placeholder,
+  value,
+  ...prp
+}: ITextInputProps) {
   const [focused, setFocused] = useState(false);
   return (
     <View
@@ -15,6 +27,7 @@ export function ITextInput({ label, placeholder }: ITextInputProps) {
         onBlur={() => setFocused(false)}
         onFocus={() => setFocused(true)}
         placeholder={placeholder}
+        {...prp}
       />
       <Text style={styles.label}>{label}</Text>
     </View>
