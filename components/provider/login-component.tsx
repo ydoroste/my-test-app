@@ -8,30 +8,37 @@ import {
 import React, { useEffect, useState } from "react";
 import { ITextInput } from "../utitlity";
 import auth from "@react-native-firebase/auth";
-import database from "@react-native-firebase/database";
 
 export function LoginComponent() {
-  const [initializing, setInitializing] = useState(false);
-  const [user, setUser] = useState();
   const [state, setState] = useState({
     email: "",
     password: "",
-    name: "",
-    age: "",
+    tab: "login",
+    error: "",
   });
-  function onAuthStateChanged(user) {
-    console.log(user, "user----");
-    setUser(user);
-    if (initializing) setInitializing(false);
-  }
-
-  useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
-  }, []);
 
   const onlogin = () => {
     if (!state.email || !state.password) return;
+    try {
+      // console.log(state.email, state.password, "email & password");
+      auth()
+        .signInWithEmailAndPassword(state.email, state.password)
+        .then((res) => {
+          console.log(res, "response");
+          console.log("User account created & signed in!");
+        })
+        .catch((error) => {
+          console.log(error, "error----");
+          setState((s) => ({ ...s, error: "user dosnot exists!" }));
+
+          console.error(error);
+        });
+    } catch (e) {
+      console.log(e, "error in catch");
+    }
+  };
+  const onSignup = () => {
+    if (!state.email && !state.password) return;
     try {
       // console.log(state.email, state.password, "email & password");
       auth()
@@ -43,15 +50,15 @@ export function LoginComponent() {
         .catch((error) => {
           console.log(error, "error----");
           if (error.code === "auth/email-already-in-use") {
-            auth()
-              .signInWithEmailAndPassword(state.email, state.password)
-              .then((res) => {
-                console.log(res, "response of sign in");
-              });
+            setState((s) => ({ ...s, error: "user exists!!" }));
           }
 
           if (error.code === "auth/invalid-email") {
             console.log("That email address is invalid!");
+            setState((s) => ({
+              ...s,
+              error: "That email address is invalid!",
+            }));
           }
 
           console.error(error);
@@ -61,53 +68,14 @@ export function LoginComponent() {
     }
   };
 
-  const handleSaveUser = () => {
-    database().ref(`posts/${user.uid}`).remove();
-    return;
-    database()
-      .ref(`users/${user.uid}`)
-      .set({
-        name: state.name,
-        age: state.age,
-      })
-      .then((res) => {
-        console.log(res, "response of set user");
-      });
+  const onPressBtn = () => {
+    if (state.tab == "login") {
+      onlogin();
+    } else {
+      onSignup();
+    }
   };
-  const handleLogOut = () => {
-    auth()
-      .signOut()
-      .then((res) => {
-        setUser(null);
-      });
-  };
-  if (!!user)
-    return (
-      <View style={styles.container}>
-        <View style={styles.body}>
-          <View style={styles.card}>
-            <ITextInput
-              onChangeText={(text) => setState((s) => ({ ...s, name: text }))}
-              value={state.name}
-              placeholder="name"
-              label="Name"
-            />
-            <ITextInput
-              onChangeText={(text) => setState((s) => ({ ...s, age: text }))}
-              value={state.age}
-              placeholder="age"
-              label="Age"
-            />
-            <TouchableOpacity onPress={handleSaveUser} style={styles.loginBtn}>
-              <Text style={{ color: "white" }}>set</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <TouchableOpacity onPress={handleLogOut}>
-          <Text>sign out</Text>
-        </TouchableOpacity>
-      </View>
-    );
+
   return (
     <View style={styles.container}>
       <View style={styles.body}>
@@ -122,16 +90,32 @@ export function LoginComponent() {
           />
           <ITextInput
             onChangeText={(text) => setState((s) => ({ ...s, password: text }))}
-            value={state.email}
+            value={state.password}
             placeholder="password"
             label="Password"
           />
-          <TouchableOpacity onPress={onlogin} style={styles.loginBtn}>
-            <Text style={{ color: "white" }}>login</Text>
+          {state.error && <Text style={{ color: "red" }}>{state.error}</Text>}
+          <TouchableOpacity onPress={onPressBtn} style={styles.loginBtn}>
+            <Text style={{ color: "white" }}>
+              {" "}
+              {state.tab == "login" ? "login" : "signup"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
-      <Text>not have account?</Text>
+
+      <TouchableOpacity
+        onPress={() =>
+          setState((s) => ({
+            ...s,
+            tab: s.tab === "login" ? "signup" : "login",
+          }))
+        }
+      >
+        <Text>
+          {state.tab == "login" ? "not have account?" : "have account?"}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

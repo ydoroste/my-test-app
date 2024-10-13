@@ -6,13 +6,14 @@ import {
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { View, Text, SafeAreaView } from "react-native";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { SampleComponent, Counter } from "@/components/utitlity";
-import { LoginComponent } from "@/components/provider";
+import { FormProvider, LoginComponent } from "@/components/provider";
+import auth from "@react-native-firebase/auth";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,12 +23,22 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+  const onAuthStateChanged = (user) => {
+    console.log(user, "user----");
+    setUser(user);
+  };
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber;
+  }, []);
 
   if (!loaded) {
     return null;
@@ -36,7 +47,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaView style={{ flex: 1 }}>
-        <LoginComponent />
+        {user ? <FormProvider /> : <LoginComponent />}
       </SafeAreaView>
     </ThemeProvider>
   );

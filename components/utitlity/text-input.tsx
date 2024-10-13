@@ -27,6 +27,7 @@ export function ITextInput({
         onBlur={() => setFocused(false)}
         onFocus={() => setFocused(true)}
         placeholder={placeholder}
+        value={value}
         {...prp}
       />
       <Text style={styles.label}>{label}</Text>
